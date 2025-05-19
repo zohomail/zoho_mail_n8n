@@ -53,5 +53,8 @@
     "tslint": "^6.1.3",
     "typescript": "~4.8.4",
     "moment-timezone": "0.5.37"
+  },
+  "bugs": {
+    "url": "https://github.com/zohomail/zoho_mail_n8n/issues"
   }
 }
