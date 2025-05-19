@@ -1,0 +1,59 @@
+{
+    "type": "object",
+    "properties": {
+      "data": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "VW": {
+            "type": "boolean"
+          },
+          "previousFolderId": {
+            "type": "string"
+          },
+          "HIDE": {
+            "type": "boolean"
+          },
+          "parentFolderId": {
+            "type": "string"
+          },
+          "isArchived": {
+            "type": "number"
+          },
+          "folderName": {
+            "type": "string"
+          },
+          "imapAccess": {
+            "type": "boolean"
+          },
+          "folderType": {
+            "type": "string"
+          },
+          "URI": {
+            "type": "string"
+          },
+          "folderId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "VW",
+          "previousFolderId",
+          "HIDE",
+          "parentFolderId",
+          "isArchived",
+          "folderName",
+          "imapAccess",
+          "folderType",
+          "URI",
+          "folderId"
+        ]
+      }
+    },
+    "required": [
+      "data"
+    ]
+  }

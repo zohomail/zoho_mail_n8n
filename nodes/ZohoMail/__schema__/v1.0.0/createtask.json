@@ -1,0 +1,43 @@
+{
+    "type": "object",
+    "properties": {
+      "data": {
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string"
+          },
+          "messageId": {
+            "type": "string"
+          },
+          "fromAddress": {
+            "type": "string"
+          },
+          "mailId": {
+            "type": "string"
+          },
+          "toAddress": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "ccAddress": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject",
+          "messageId",
+          "fromAddress",
+          "mailId",
+          "toAddress",
+          "content",
+          "ccAddress"
+        ]
+      }
+    },
+    "required": [
+      "data"
+    ]
+  }

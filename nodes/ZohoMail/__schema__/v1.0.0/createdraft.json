@@ -1,0 +1,47 @@
+{
+    "type": "object",
+    "properties": {
+      "data": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "messageId": {
+            "type": "string"
+          },
+          "fromAddress": {
+            "type": "string"
+          },
+          "mailFormat": {
+            "type": "string"
+          },
+          "mailId": {
+            "type": "string"
+          },
+          "toAddress": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode",
+          "subject",
+          "messageId",
+          "fromAddress",
+          "mailFormat",
+          "mailId",
+          "toAddress",
+          "content"
+        ]
+      }
+    },
+    "required": [
+      "data"
+    ]
+  }
