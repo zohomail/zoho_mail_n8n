@@ -46,6 +46,7 @@ export async function zohomailApiRequest(
 ) {
 	const { oauthTokenData } = await this.getCredentials<ZohoMailOAuth2ApiCredentials>('zohoMailOAuth2Api');
 	const options: IRequestOptions = {
+		headers: {"user-agent": "n8n zohomail"},
 		body: body,
 		method,
 		qs,
