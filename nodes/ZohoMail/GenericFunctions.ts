@@ -5,7 +5,7 @@ import {
 	ILoadOptionsFunctions,
 	JsonObject,
 	IHttpRequestMethods,
-	IRequestOptions,
+	IHttpRequestOptions,
 	NodeOperationError,
 	NodeApiError,
 	IPollFunctions
@@ -45,12 +45,12 @@ export async function zohomailApiRequest(
 	uri?: string,
 ) {
 	const { oauthTokenData } = await this.getCredentials<ZohoMailOAuth2ApiCredentials>('zohoMailOAuth2Api');
-	const options: IRequestOptions = {
+	const options: IHttpRequestOptions = {
 		headers: {"user-agent": "N8n Zoho Mail"},
 		body: body,
 		method,
 		qs,
-		uri: `https://mail.${getDomain(oauthTokenData.api_domain)}/${endpoint}`,
+		url: `https://mail.${getDomain(oauthTokenData.api_domain)}/${endpoint}`,
 		json: true,
 	};
 	if (!Object.keys(body).length) {
@@ -60,6 +60,7 @@ export async function zohomailApiRequest(
 	if (!Object.keys(qs).length) {
 		delete options.qs;
 	}
+
 	try {
 		const responseData = await this.helpers.requestOAuth2?.call(this, 'zohoMailOAuth2Api', options);
 		if (responseData === undefined) return [];
@@ -93,6 +94,7 @@ export async function getPicklistAccountOptions(
 		value: option.accountId,
 	}));
 }
+
 export async function getPicklistFromAddressOptions(
 	this: ILoadOptionsFunctions,
 	targetField: string
@@ -107,12 +109,13 @@ export async function getPicklistFromAddressOptions(
     const pickListOptions = responseData.data.sendMailDetails
 
 	if (!pickListOptions) return [];
-
+	
     return pickListOptions.map((option) => ({
 		name: option.displayName,
 		value: option.fromAddress,
 	}));   
 }
+
 export async function getPickListFolderoptions(
     this: ILoadOptionsFunctions,
     targetField: string
@@ -134,6 +137,7 @@ export async function getPickListFolderoptions(
 	}));   
 
 }
+
 export async function getPickListLabeloptions(
     this: ILoadOptionsFunctions,
     targetField: string
@@ -155,6 +159,7 @@ export async function getPickListLabeloptions(
 	}));   
 
 }
+
 export function getDomain(domain: string): string | undefined {
     const value: { [key: string]: string } = {
         ".com": "zoho.com",

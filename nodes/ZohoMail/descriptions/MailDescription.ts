@@ -415,44 +415,36 @@ export const messageActionFields: INodeProperties[] = [
 		required: true,
 	},			
 ]
-export const triggerMessageOperations: INodeProperties[] = [
+export const triggerMessageNotificationOperations: INodeProperties[] = [
 	{
-		displayName: 'Trigger On',
-		name: 'operationtrigger',
+	    displayName: 'Trigger On',
+	    name: 'optionstrigger',
 		type: 'options',
 		required: true,
 		noDataExpression: true,
 		displayOptions: {
 			show: {
-				triggerresource: ['triggermessage'],
+				triggerresource: ['message'],
 			},
 		},
 		options: [
 			{
-				name: 'New Email Matching Search Trigger',
-				value: 'newmatchingemail',
-				description: 'Triggers when you receive a new email that matches given conditions.',
-			},	
-			{
-				name: 'New Tagged Email',
-				value: 'newtaggedmail',
-				description: 'Triggers when a new email is received and you tag it within two days.',
+				name: 'New Mail Notification',
+				value: 'newmailnotification',
+				description: 'Triggers when you receive a new email.'
 			},
 			{
-				name: 'New Email',
-				value: 'newemails',
-				description: 'Triggers when you receive a new email.',
+				name: 'New Tagged Mail Notification',
+				value: 'newTaggedmailnotification',
+				description: 'Triggers when a new tagged email is received.'
 			}
 		],
-		default: 'newmatchingemail',
+		default: 'newmailnotification'
 	},
 ];
-export const newMatchingEmailTriggerFields: INodeProperties[] = [
 
-    // ----------------------------------------
-    //     Message: New Matching Email
-    // ----------------------------------------
-	{ 
+export const triggerNewMailNotificationFields: INodeProperties[] = [
+      { 
 		displayName: 'Account',
 		name: 'account',
 		type: 'options',
@@ -461,60 +453,207 @@ export const newMatchingEmailTriggerFields: INodeProperties[] = [
 		hint: 'Select the account (Zoho account/ POP account) from the list of accounts available in Zoho Mail.',
 		displayOptions: {
 			show: {
-				triggerresource: ['triggermessage'],
-				operationtrigger: ['newmatchingemail']
+				triggerresource: ['message'],
+				optionstrigger: ['newmailnotification']
 			},
 		},
 		typeOptions: {
             loadOptionsMethod: 'getListAccount',
         },
-		required: true,
-	},
-	{ 
-		displayName: 'Search Value',
-		name: 'searchkey',
-		type: 'string',
-		default: '',
-		description: 'Enter the search value',
-		hint: 'This works the same as the advanced search in Zoho Mail. Example search string : entire:bill::sender:payments@example.com The above search string list all emails from the sender payments@example.com, with the word bill anywhere in the email content. [Learn more] (https://www.zoho.com/mail/help/search-syntax.html).',
-		displayOptions: {
-			show: {
-				triggerresource: ['triggermessage'],
-				operationtrigger: ['newmatchingemail'],
-			},
-		},
 		required: true,
 	},
 	{
-		displayName: 'Group Result',
-		name: 'groupresult',
+		displayName: 'Matching Condition',
+		name: 'matchingcondition',
 		type: 'options',
-		default: 'false',
-		description: "Include this parameter if you want the search results that are part of the same conversation to be grouped together. This value will be set to false by default. Set the value of the parameter to true if you want to group the emails.",
-		hint: "Include this parameter if you want the search results that are part of the same conversation to be grouped together. This value will be set to false by default. Set the value of the parameter to true if you want to group the emails.",
-		displayOptions: {
+		default: '',
+		description: '',
+		hint: '',
+	    displayOptions: {
 			show: {
-				triggerresource: ['triggermessage'],
-				operationtrigger: ['newmatchingemail']
+				triggerresource: ['message'],
+				optionstrigger: ['newmailnotification']
 			},
 		},
 		options: [
 			{
-				name: 'Yes',
+				name: 'OR',
+				value: 'or',
+			},
+            {
+				name: 'AND',
+				value: 'and',
+			},
+		],
+	    required: false
+	},
+	{
+		displayName : 'From',
+		name: 'from',
+		type: 'string',
+		default: '',
+		hint: 'Enter email address.',
+	    displayOptions: {
+			show: {
+				triggerresource: ['message'],
+				optionstrigger: ['newmailnotification']
+			},
+		},
+	    required: false
+	},
+	{
+		displayName : 'To',
+		name: 'to',
+		type: 'string',
+		default: '',
+		hint: 'Enter email address.',
+	    displayOptions: {
+			show: {
+				triggerresource: ['message'],
+				optionstrigger: ['newmailnotification']
+			},
+		},
+	    required: false
+	},
+	{
+		displayName : 'Subject',
+		name: 'subject',
+		type: 'string',
+		default: '',
+		hint: "Specify a keyword from the email's subject line.",
+	    displayOptions: {
+			show: {
+				triggerresource: ['message'],
+				optionstrigger: ['newmailnotification']
+			},
+		},
+	    required: false
+	},
+	{
+		displayName : 'CC',
+		name: 'cc',
+		type: 'string',
+		default: '',
+		hint: 'Enter email address.',
+	    displayOptions: {
+			show: {
+				triggerresource: ['message'],
+				optionstrigger: ['newmailnotification']
+			},
+		},
+	    required: false
+	},
+	{
+		displayName : 'BCC',
+		name: 'bcc',
+		type: 'string',
+		default: '',
+		hint: 'Enter email address.',
+	    displayOptions: {
+			show: {
+				triggerresource: ['message'],
+				optionstrigger: ['newmailnotification']
+			},
+		},
+	    required: false
+	},
+	{
+		displayName: 'Content',
+		name: 'content',
+		type: 'string',
+		default: '',
+		hint: 'Specify a keyword from the email content.',
+		displayOptions: {
+			show: {
+				triggerresource: ['message'],
+				optionstrigger: ['newmailnotification']
+			},
+		},
+	    required: false
+	},
+	{
+		displayName: 'Priority',
+		name: 'priority',
+		type: 'options',
+		default: '',
+		hint: 'Specify a keyword from the email content.',
+		displayOptions: {
+			show: {
+				triggerresource: ['message'],
+				optionstrigger: ['newmailnotification']
+			},
+		},
+		options: [
+			{
+				name: 'High',
+				value: 'high',
+			},
+			{
+               name: 'Medium',
+			   value: 'medium'
+			},
+			{
+				name: 'Low',
+				value: 'low'
+			}
+		],
+	    required: false
+	},
+	{
+		displayName: 'Attachment Type',
+		name: 'attachment_type',
+		type: 'string',
+		default: '',
+		hint: 'Enter attachment type (Example: .pdf, .doc. .xlx, etc.)',
+		displayOptions: {
+			show: {
+				triggerresource: ['message'],
+				optionstrigger: ['newmailnotification']
+			},
+		},
+	    required: false
+	},
+	{
+		displayName: 'Attachment Name',
+		name: 'attachment_name',
+		type: 'string',
+		default: '',
+		hint: 'Enter attachment name',
+		displayOptions: {
+			show: {
+				triggerresource: ['message'],
+				optionstrigger: ['newmailnotification']
+			},
+		},
+	    required: false
+	},
+	{
+		displayName: 'Has Attachment',
+		name: 'has_attachment',
+		type: 'options',
+		default: '',
+		hint: 'Specify a keyword from the email content.',
+		displayOptions: {
+			show: {
+				triggerresource: ['message'],
+				optionstrigger: ['newmailnotification']
+			},
+		},
+		options: [
+			{
+				name: 'True',
 				value: 'true',
 			},
 			{
-				name: 'No',
-				value: 'false'
+               name: 'False',
+			   value: 'false'
 			}
-		]
-	}
-]
-export const newTaggedEmailTriggerFields: INodeProperties[] = [
+		],
+	    required: false
+	},
+];
 
-    // ----------------------------------------
-    //     Message: New Matching Email
-    // ----------------------------------------
+export const triggerNewTaggedMailNotificationFields: INodeProperties[] = [
 	{ 
 		displayName: 'Account',
 		name: 'account',
@@ -524,8 +663,8 @@ export const newTaggedEmailTriggerFields: INodeProperties[] = [
 		hint: 'Select the account (Zoho account/ POP account) from the list of accounts available in Zoho Mail.',
 		displayOptions: {
 			show: {
-				triggerresource: ['triggermessage'],
-				operationtrigger: ['newtaggedmail']
+				triggerresource: ['message'],
+				optionstrigger: ['newTaggedmailnotification']
 			},
 		},
 		typeOptions: {
@@ -533,17 +672,17 @@ export const newTaggedEmailTriggerFields: INodeProperties[] = [
         },
 		required: true,
 	},
-	{ 
-		displayName: 'Label Name',
-		name: 'tagname',
+	{
+		displayName: 'Tag Name',
+		name: 'labelname',
 		type: 'options',
 		default: '',
-		description: 'Triggers when a new email is received and you tag it within two days.',
-		hint: 'Triggers when a new email is received and you tag it within two days.',
+		description: '',
+		hint: '',
 		displayOptions: {
 			show: {
-				triggerresource: ['triggermessage'],
-				operationtrigger: ['newtaggedmail'],
+				triggerresource: ['message'],
+				optionstrigger: ['newTaggedmailnotification']
 			},
 		},
 		typeOptions: {
@@ -551,71 +690,233 @@ export const newTaggedEmailTriggerFields: INodeProperties[] = [
 			loadOptionsDependsOn: ['account']
         },
 		required: true,
-	},
-]
-export const newFolderEmailTriggerFields: INodeProperties[] = [
-
-    // ----------------------------------------
-    //     Message: New Matching Email
-    // ----------------------------------------
-	{ 
-		displayName: 'Account',
-		name: 'account',
-		type: 'options',
-		default: '',
-		description: 'Select the account (Zoho account/ POP account) from the list of accounts available in Zoho Mail.',
-		hint: 'Select the account (Zoho account/ POP account) from the list of accounts available in Zoho Mail.',
-		displayOptions: {
-			show: {
-				triggerresource: ['triggermessage'],
-				operationtrigger: ['newemails']
-			},
-		},
-		typeOptions: {
-            loadOptionsMethod: 'getListAccount',
-        },
-		required: true,
-	},
-	{ 
-		displayName: 'Folder Name',
-		name: 'foldername',
-		type: 'options',
-		default: '',
-		description: 'Choose a folder, if you want to get new emails only from a particular folder.',
-		hint: 'Choose a folder, if you want to get new emails only from a particular folder.',
-		displayOptions: {
-			show: {
-				triggerresource: ['triggermessage'],
-				operationtrigger: ['newemails'],
-			},
-		},
-		typeOptions: {
-            loadOptionsMethod: 'getListFolder',
-			loadOptionsDependsOn: ['account']
-        },
-	},
-	{
-		displayName: 'Group Result',
-		name: 'groupresult',
-		type: 'options',
-		default: 'false',
-		description: "Include this parameter if you want the search results that are part of the same conversation to be grouped together. This value will be set to false by default. Set the value of the parameter to true if you want to group the emails.",
-		hint: "Include this parameter if you want the search results that are part of the same conversation to be grouped together. This value will be set to false by default. Set the value of the parameter to true if you want to group the emails.",
-		displayOptions: {
-			show: {
-				triggerresource: ['triggermessage'],
-				operationtrigger: ['newemails']
-			},
-		},
-		options: [
-			{
-				name: 'Yes',
-				value: 'true',
-			},
-			{
-				name: 'No',
-				value: 'false'
-			}
-		]
 	}
-]
+];
+
+// export const triggerMessageOperations: INodeProperties[] = [
+// 	{
+// 		displayName: 'Trigger On',
+// 		name: 'operationtrigger',
+// 		type: 'options',
+// 		required: true,
+// 		noDataExpression: true,
+// 		displayOptions: {
+// 			show: {
+// 				triggerresource: ['triggermessage'],
+// 			},
+// 		},
+// 		options: [
+// 			{
+// 				name: 'New Email Matching Search Trigger',
+// 				value: 'newmatchingemail',
+// 				description: 'Triggers when you receive a new email that matches given conditions.',
+// 			},	
+// 			{
+// 				name: 'New Tagged Email',
+// 				value: 'newtaggedmail',
+// 				description: 'Triggers when a new email is received and you tag it within two days.',
+// 			},
+// 			{
+// 				name: 'New Email',
+// 				value: 'newemails',
+// 				description: 'Triggers when you receive a new email.',
+// 			}
+// 		],
+// 		default: 'newmatchingemail',
+// 	},
+// ];
+
+// export const newMatchingEmailTriggerFields: INodeProperties[] = [
+
+//     // ----------------------------------------
+//     //     Message: New Matching Email
+//     // ----------------------------------------
+// 	{ 
+// 		displayName: 'Account',
+// 		name: 'account',
+// 		type: 'options',
+// 		default: '',
+// 		description: 'Select the account (Zoho account/ POP account) from the list of accounts available in Zoho Mail.',
+// 		hint: 'Select the account (Zoho account/ POP account) from the list of accounts available in Zoho Mail.',
+// 		displayOptions: {
+// 			show: {
+// 				triggerresource: ['triggermessage'],
+// 				operationtrigger: ['newmatchingemail']
+// 			},
+// 		},
+// 		typeOptions: {
+//             loadOptionsMethod: 'getListAccount',
+//         },
+// 		required: true,
+// 	},
+// 	{ 
+// 		displayName: 'Search Value',
+// 		name: 'searchkey',
+// 		type: 'string',
+// 		default: '',
+// 		description: 'Enter the search value',
+// 		hint: 'This works the same as the advanced search in Zoho Mail. Example search string : entire:bill::sender:payments@example.com The above search string list all emails from the sender payments@example.com, with the word bill anywhere in the email content. [Learn more] (https://www.zoho.com/mail/help/search-syntax.html).',
+// 		displayOptions: {
+// 			show: {
+// 				triggerresource: ['triggermessage'],
+// 				operationtrigger: ['newmatchingemail'],
+// 			},
+// 		},
+// 		required: true,
+// 	},
+// 	{
+// 		displayName: 'Group Result',
+// 		name: 'groupresult',
+// 		type: 'options',
+// 		default: 'false',
+// 		description: "Include this parameter if you want the search results that are part of the same conversation to be grouped together. This value will be set to false by default. Set the value of the parameter to true if you want to group the emails.",
+// 		hint: "Include this parameter if you want the search results that are part of the same conversation to be grouped together. This value will be set to false by default. Set the value of the parameter to true if you want to group the emails.",
+// 		displayOptions: {
+// 			show: {
+// 				triggerresource: ['triggermessage'],
+// 				operationtrigger: ['newmatchingemail']
+// 			},
+// 		},
+// 		options: [
+// 			{
+// 				name: 'Yes',
+// 				value: 'true',
+// 			},
+// 			{
+// 				name: 'No',
+// 				value: 'false'
+// 			}
+// 		]
+// 	}
+// ]
+// export const newTaggedEmailTriggerFields: INodeProperties[] = [
+
+//     // ----------------------------------------
+//     //     Message: New Matching Email
+//     // ----------------------------------------
+// 	{ 
+// 		displayName: 'Account',
+// 		name: 'account',
+// 		type: 'options',
+// 		default: '',
+// 		description: 'Select the account (Zoho account/ POP account) from the list of accounts available in Zoho Mail.',
+// 		hint: 'Select the account (Zoho account/ POP account) from the list of accounts available in Zoho Mail.',
+// 		displayOptions: {
+// 			show: {
+// 				triggerresource: ['triggermessage'],
+// 				operationtrigger: ['newtaggedmail']
+// 			},
+// 		},
+// 		typeOptions: {
+//             loadOptionsMethod: 'getListAccount',
+//         },
+// 		required: true,
+// 	},
+// 	{ 
+// 		displayName: 'Label Name',
+// 		name: 'tagname',
+// 		type: 'options',
+// 		default: '',
+// 		description: 'Triggers when a new email is received and you tag it within two days.',
+// 		hint: 'Triggers when a new email is received and you tag it within two days.',
+// 		displayOptions: {
+// 			show: {
+// 				triggerresource: ['triggermessage'],
+// 				operationtrigger: ['newtaggedmail'],
+// 			},
+// 		},
+// 		typeOptions: {
+//             loadOptionsMethod: 'getListLabel',
+// 			loadOptionsDependsOn: ['account']
+//         },
+// 		required: true,
+// 	},
+// ]
+// export const newFolderEmailTriggerFields: INodeProperties[] = [
+
+//     // ----------------------------------------
+//     //     Message: New Matching Email
+//     // ----------------------------------------
+// 	{ 
+// 		displayName: 'Account',
+// 		name: 'account',
+// 		type: 'options',
+// 		default: '',
+// 		description: 'Select the account (Zoho account/ POP account) from the list of accounts available in Zoho Mail.',
+// 		hint: 'Select the account (Zoho account/ POP account) from the list of accounts available in Zoho Mail.',
+// 		displayOptions: {
+// 			show: {
+// 				triggerresource: ['triggermessage'],
+// 				operationtrigger: ['newemails']
+// 			},
+// 		},
+// 		typeOptions: {
+//             loadOptionsMethod: 'getListAccount',
+//         },
+// 		required: true,
+// 	},
+// 	{ 
+// 		displayName: 'Folder Name',
+// 		name: 'foldername',
+// 		type: 'options',
+// 		default: '',
+// 		description: 'Choose a folder, if you want to get new emails only from a particular folder.',
+// 		hint: 'Choose a folder, if you want to get new emails only from a particular folder.',
+// 		displayOptions: {
+// 			show: {
+// 				triggerresource: ['triggermessage'],
+// 				operationtrigger: ['newemails'],
+// 			},
+// 		},
+// 		typeOptions: {
+//             loadOptionsMethod: 'getListFolder',
+// 			loadOptionsDependsOn: ['account']
+//         },
+// 	},
+// 	{
+// 		displayName: 'Group Result',
+// 		name: 'groupresult',
+// 		type: 'options',
+// 		default: 'false',
+// 		description: "Include this parameter if you want the search results that are part of the same conversation to be grouped together. This value will be set to false by default. Set the value of the parameter to true if you want to group the emails.",
+// 		hint: "Include this parameter if you want the search results that are part of the same conversation to be grouped together. This value will be set to false by default. Set the value of the parameter to true if you want to group the emails.",
+// 		displayOptions: {
+// 			show: {
+// 				triggerresource: ['triggermessage'],
+// 				operationtrigger: ['newemails']
+// 			},
+// 		},
+// 		options: [
+// 			{
+// 				name: 'Yes',
+// 				value: 'true',
+// 			},
+// 			{
+// 				name: 'No',
+// 				value: 'false'
+// 			}
+// 		]
+// 	}
+// ]
+
+// export const NewMailNotification : INodeProperties[] = [
+// 	{ 
+// 		displayName: 'Account',
+// 		name: 'account',
+// 		type: 'options',
+// 		default: '',
+// 		description: 'Select the account (Zoho account/ POP account) from the list of accounts available in Zoho Mail.',
+// 		hint: 'Select the account (Zoho account/ POP account) from the list of accounts available in Zoho Mail.',
+// 		displayOptions: {
+// 			show: {
+// 				triggerresource: ['triggermessage'],
+// 				operationtrigger: ['newmailnotification']
+// 			},
+// 		},
+// 		typeOptions: {
+//             loadOptionsMethod: 'getListAccount',
+//         },
+// 		required: true,
+// 	}
+     
+// ]

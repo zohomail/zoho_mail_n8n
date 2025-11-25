@@ -102,13 +102,13 @@ export class ZohoMailOAuth2Api implements ICredentialType {
 			displayName: 'Scope',
 			name: 'scope',
 			type: 'hidden',
-			default: 'VirtualOffice.folders.CREATE,VirtualOffice.folders.READ,VirtualOffice.accounts.READ,VirtualOffice.search.READ,VirtualOffice.messages.READ,VirtualOffice.messages.CREATE,VirtualOffice.tags.CREATE,VirtualOffice.tags.READ',
+			default: 'VirtualOffice.folders.CREATE,VirtualOffice.folders.READ,VirtualOffice.accounts.READ,VirtualOffice.search.READ,VirtualOffice.messages.READ,VirtualOffice.messages.CREATE,VirtualOffice.tags.CREATE,VirtualOffice.tags.READ,VirtualOffice.ogwebhooks.ALL,VirtualOffice.filters.ALL',
 		},
 		{
 			displayName: 'Auth URI Query Parameters',
 			name: 'authQueryParameters',
 			type: 'hidden',
-			default: 'access_type=offline',
+			default: 'access_type=offline&prompt=consent',
 		},
 		{
 			displayName: 'Authentication',

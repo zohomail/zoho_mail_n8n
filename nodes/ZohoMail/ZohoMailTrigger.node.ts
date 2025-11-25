@@ -1,324 +1,229 @@
-import moment from 'moment-timezone';
 import {
 	IDataObject,
 	ILoadOptionsFunctions,
 	INodeType,
 	INodeTypeDescription,
-	INodeExecutionData,
-	IPollFunctions,
-	NodeOperationError,
-	NodeConnectionType
+    IWebhookFunctions,
+    IHookFunctions,
+    NodeConnectionType,
+    IWebhookResponseData
 } from 'n8n-workflow';
 
 import {
 	getPicklistAccountOptions,
     getPickListLabeloptions,
-    getPickListFolderoptions,
-	zohomailApiRequest
+    zohomailApiRequest
 } from './GenericFunctions';
 
 import {
-    triggerMessageOperations,
-    newMatchingEmailTriggerFields,
-    newTaggedEmailTriggerFields,
-    newFolderEmailTriggerFields
+    triggerMessageNotificationOperations,
+    triggerNewMailNotificationFields,
+    triggerNewTaggedMailNotificationFields
 } from './descriptions';
 
-
 export class ZohoMailTrigger implements INodeType {
-	description: INodeTypeDescription = {
+		description: INodeTypeDescription = {
 		displayName: 'Zoho Mail Trigger',
 		name: 'zohoMailTrigger',
 		icon: 'file:ZohoMail.png',
 		group: ['trigger'],
 		version: 1,
-		description: 'Fetches mails from Zoho Mail and starts the workflow on specified polling intervals.',
+		description: '',
 		defaults: {
 			name: 'Zoho Mail Trigger',
 		},
+		inputs: [],
+		outputs: [NodeConnectionType.Main],
 		credentials: [
 			{
 				name: 'zohoMailOAuth2Api',
 				required: true,
 			},
 		],
-        polling: true,
-		inputs: [],
-		outputs: [NodeConnectionType.Main],
-        properties: [
+		webhooks: [
 			{
-				displayName: 'Trigger Resource',
-				name: 'triggerresource',
-				type: 'options',
-				required: true,
-                options: [
-					{
-						name: 'Message',
-						value: 'triggermessage',
-					},
-                ],
-                default: 'triggermessage'
+				name: 'default',
+				httpMethod: 'POST',
+				responseMode: 'onReceived',
+				path: 'webhook',
 			},
-            ...triggerMessageOperations,
-            ...newMatchingEmailTriggerFields,
-            ...newTaggedEmailTriggerFields,
-            ...newFolderEmailTriggerFields
 		],
-	};
+        properties: [
+        {
+            displayName: 'Trigger Resource',
+            name: 'triggerresource',
+            type: 'options',
+            required: true,
+            options: [
+            {
+                name: 'Message',
+                value: 'message',
+            },
+            ],
+        default: 'message'
+        },
+        ...triggerMessageNotificationOperations,
+        ...triggerNewMailNotificationFields,
+        ...triggerNewTaggedMailNotificationFields
+        ]
+    };
     methods = {
-		loadOptions: {
-            async getListAccount(this: ILoadOptionsFunctions) {
-				return await getPicklistAccountOptions.call(this);
-			},
-            async getListLabel(this: ILoadOptionsFunctions) {
-				const account = this.getCurrentNodeParameter('account') as string;
-				return await getPickListLabeloptions.call(this, account.toString());
-			},
-            async getListFolder(this: ILoadOptionsFunctions) {
-				const account = this.getCurrentNodeParameter('account') as string;
-				return await getPickListFolderoptions.call(this, account.toString());
-			}
+            loadOptions: {
+                async getListAccount(this: ILoadOptionsFunctions) {
+                    return await getPicklistAccountOptions.call(this);
+                },
+                async getListLabel(this: ILoadOptionsFunctions) {
+                    const account = this.getCurrentNodeParameter('account') as string;
+                    return await getPickListLabeloptions.call(this, account.toString());
+                },
+            },
         }
-    }
-    async poll(this: IPollFunctions): Promise<INodeExecutionData[][] | null> {
-		const webhookData = this.getWorkflowStaticData('node');
-
-		const qs: IDataObject = {};
-
-		const triggerresource = this.getNodeParameter('triggerresource');
-		const triggeroperation = this.getNodeParameter('operationtrigger');
-
-		const accountId = this.getNodeParameter('account');
-		
-		let responseData;
-
-		if (triggerresource === 'triggermessage'){
-
-			if (triggeroperation === 'newtaggedmail'){
-
-                qs.limit = 10;
-				qs.labelid = this.getNodeParameter('tagname');
-				responseData = await zohomailApiRequest.call(this, 'GET', `api/accounts/${accountId}/messages/view`,{} ,qs);
-
-                if (responseData.status.code === 200) {
-	                const messages = responseData.data as Record<string, any>[];
-	                const twoDaysBefore = Date.now() - 2 * 24 * 60 * 60 * 1000;
-	                const msgList: Record<string, any>[] = [];
-
-	                for (const msg of messages) {
-		                if (msg.messageId !== undefined && msg.messageId !== null && msg.receivedTime >= twoDaysBefore) {
-			                msg.id = msg.receivedTime;
-			                if ('status2' in msg) {
-				                delete msg.status2;
-			                }
-                            if ('status' in msg) {
-				                msg.readStatus = msg.status === '0' ? 'Unread' : 'Read';
-				                delete msg.status;
-			                }
-                            if ('priority' in msg) {
-				                switch (msg.priority) {
-					                case '1':
-						                msg.priority = 'Highest';
-						                break;
-					                case '2':
-						                msg.priority = 'High';
-						                break;
-					                case '4':
-						                msg.priority = 'Low';
-						                break;
-					                case '5':
-						                msg.priority = 'Lowest';
-						                break;
-					                default:
-						                msg.priority = 'Normal';
-				                }
-			                }
-                            if ('subject' in msg) {
-				                msg.subject = msg.subject;
-			                }
-                            if ('summary' in msg) {
-				                msg.summary = msg.summary;
-			                }
-			                if ('hasAttachment' in msg) {
-				                msg.hasAttachment = msg.hasAttachment === '1' ? 'Yes' : 'No';
-			                }
-                            if ('sentDateInGMT' in msg) {
-				                msg.sentAt = moment(Number(msg.sentDateInGMT)).tz('GMT').format();
-						    }
-							const mailContent = await zohomailApiRequest.call(this, 'GET', `api/accounts/${accountId}/folders/${msg.folderId}/messages/${msg.messageId}/content`,{} ,{});
-							if (mailContent.status.code === 200) {
-								msg.body = mailContent.data.content;
-							}
-			                msgList.push(msg);
-		                }
-	                }
-                    responseData = msgList;
+    
+    webhookMethods = {
+        default: {
+            async checkExists(this: IHookFunctions): Promise<boolean> {
+                const webhookUrl = this.getNodeWebhookUrl('default');
+                const webhookData = this.getWorkflowStaticData('node');
+                const triggerOptions = this.getNodeParameter('optionstrigger') as string;
+                const accountId = this.getNodeParameter('account') as string;
+                const qs: IDataObject = {
+                    action: 'MANAGE_OWH',
+                    accId: accountId
+                };
+                const endpoint = 'integPlatform/api/outgoingWebhooks';
+                const collection = await zohomailApiRequest.call(this, 'GET', endpoint, {}, qs);
+                    
+                for (const webhook of collection.data.data.WEBHOOK_DATA) {
+                if (
+                    webhook.webhookURL === webhookUrl) {
+                        webhookData.webhookURI = webhook.webhookURL;
+                        return true;
+                    }
                 }
-				else{
-					throw new NodeOperationError(this.getNode(), new Error('The Zoho Mail New Tagged Mail API returned an error.'));
-				}
-			}
-			else if(triggeroperation === 'newemails'){
+                return false;
+            },	
 
-				const twoDaysBefore = Date.now() - 2 * 24 * 60 * 60 * 1000;
+            async create(this: IHookFunctions): Promise<boolean> {
+                const webhookData = this.getWorkflowStaticData('node');
+                const webhookUrl = this.getNodeWebhookUrl('default');
+                const triggerOptions = this.getNodeParameter('optionstrigger') as string;
+                const accountId = this.getNodeParameter('account') as string;
 
-				qs.searchKey = "newMails";
-				qs.receivedTime = twoDaysBefore;
-
-				if (this.getNodeParameter('groupresult') !== undefined && this.getNodeParameter('groupresult') !== '' && this.getNodeParameter('groupresult') !== 'false'){
-					qs.groupResult = this.getNodeParameter('groupresult');
-				}
-				if (this.getNodeParameter('foldername') !== undefined && this.getNodeParameter('foldername') !== ''){
-					const foldername = this.getNodeParameter('foldername');
-
-					const folderResponseData = await zohomailApiRequest.call(this, 'GET', `api/accounts/${accountId}/folders`,{} ,{});
-
-					if(folderResponseData.status.code === 200) {
-						const folderlist = folderResponseData.data as Record<string, any>[];
-						for (const msg of folderlist) {
-							if (foldername === msg.path){
-                                qs.folderId = msg.folderId;
-								break;
-							}
-					    }
-						if (!( 'folderId' in qs)){
-							throw new NodeOperationError(this.getNode(), new Error('Not a vaild folder'));
-						}
-					}
-				}
-				responseData = await zohomailApiRequest.call(this, 'GET', `api/accounts/${accountId}/messages/search`,{} ,qs);
-
-				if (responseData.status.code === 200) {
-	                const messages = responseData.data as Record<string, any>[];	
-	                const msgList: Record<string, any>[] = [];
-
-	                for (const msg of messages) {
-			            msg.id = msg.receivedTime;
-			            if ('status2' in msg) {
-				            delete msg.status2;
-			            }
-                        if ('status' in msg) {
-				            msg.readStatus = msg.status === '0' ? 'Unread' : 'Read';
-				            delete msg.status;
-			            }
-                        if ('priority' in msg) {
-				            switch (msg.priority) {
-					            case '1':
-						            msg.priority = 'Highest';
-						            break;
-					            case '2':
-						            msg.priority = 'High';
-						            break;
-					            case '4':
-						            msg.priority = 'Low';
-						            break;
-					            case '5':
-						            msg.priority = 'Lowest';
-						            break;
-					            default:
-						            msg.priority = 'Normal';
-				            }
-			            }
-                        if ('subject' in msg) {
-				            msg.subject = msg.subject;
-			            }
-                        if ('summary' in msg) {
-				            msg.summary = msg.summary;
-			            }
-			            if ('hasAttachment' in msg) {
-				            msg.hasAttachment = msg.hasAttachment === '1' ? 'Yes' : 'No';
-			            }
-                        if ('sentDateInGMT' in msg) {
-				            msg.sentAt = moment(Number(msg.sentDateInGMT)).tz('GMT').format();
-						}
-						const mailContent = await zohomailApiRequest.call(this, 'GET', `api/accounts/${accountId}/folders/${msg.folderId}/messages/${msg.messageId}/content`,{} ,{});
-						if (mailContent.status.code === 200) {
-							msg.body = mailContent.data.content;
-						}
-			            msgList.push(msg);
-		            }
-					responseData = msgList;
-				}
-				else{
-					throw new NodeOperationError(this.getNode(), new Error('The Zoho Mail New Mail API returned an error.'));
-				}
-			}
-			else if(triggeroperation === 'newmatchingemail'){
-
-				qs.searchKey = this.getNodeParameter('searchkey');
-                qs.limit = "100";
-
-				if (typeof qs.searchKey === 'string' && !qs.searchKey.includes(':')) {
-					qs.searchKey = `entire:${qs.searchKey}`;
-				}
-				if (this.getNodeParameter('groupresult') !== undefined && this.getNodeParameter('groupresult') !== '' && this.getNodeParameter('groupresult') !== 'false'){
-					qs.groupResult = this.getNodeParameter('groupresult');
-				}
-				responseData = await zohomailApiRequest.call(this, 'GET', `api/accounts/${accountId}/messages/search`,{} ,qs);
-				if (responseData.status.code === 200) {
-
-					const twoDaysBefore = Date.now() - 2 * 24 * 60 * 60 * 1000;
-
-	                const messages = responseData.data as Record<string, any>[];
-	                const msgList: Record<string, any>[] = [];
-
-	                for (const msg of messages) {
-		                if (msg.messageId !== undefined && msg.messageId !== null && msg.receivedTime >= twoDaysBefore) {
-			                msg.id = msg.receivedTime;
-			                if ('status2' in msg) {
-				                delete msg.status2;
-			                }
-                            if ('status' in msg) {
-				                msg.readStatus = msg.status === '0' ? 'Unread' : 'Read';
-				                delete msg.status;
-			                }
-                            if ('priority' in msg) {
-				                switch (msg.priority) {
-					                case '1':
-						                msg.priority = 'Highest';
-						                break;
-					                case '2':
-						                msg.priority = 'High';
-						                break;
-					                case '4':
-						                msg.priority = 'Low';
-						                break;
-					                case '5':
-						                msg.priority = 'Lowest';
-						                break;
-					                default:
-						                msg.priority = 'Normal';
-				                }
-			                }
-                            if ('subject' in msg) {
-				                msg.subject = msg.subject;
-			                }
-                            if ('summary' in msg) {
-				                msg.summary = msg.summary;
-			                }
-			                if ('hasAttachment' in msg) {
-				                msg.hasAttachment = msg.hasAttachment === '1' ? 'Yes' : 'No';
-			                }
-                            if ('sentDateInGMT' in msg) {
-				                msg.sentAt = moment(Number(msg.sentDateInGMT)).tz('GMT').format();
-						    }
-							const mailContent = await zohomailApiRequest.call(this, 'GET', `api/accounts/${accountId}/folders/${msg.folderId}/messages/${msg.messageId}/content`,{} ,{});
-							if (mailContent.status.code === 200) {
-								msg.body = mailContent.data.content;
-							}
-			                msgList.push(msg);
-		                }
-	                }
-                    responseData = msgList;
+                const qs: IDataObject = {
+                    action: 'CREATE_OWH',
+                    accId: accountId,
+                    webhookURL: webhookUrl,
+                    metaOnly: false,
+                    category: 0,
+                    webhookName: 'Outgoing Webhook Bot'
                 }
-				else{
-					throw new NodeOperationError(this.getNode(), new Error('The Zoho Mail New Matching Mail API returned an error.'));
-				}
-			}
-		}
-		if (Array.isArray(responseData) && responseData.length !== 0) {
-			return [this.helpers.returnJsonArray(responseData)];
-		}
-		return null;
-	}
+
+                var criteria = []; 
+                if (triggerOptions == 'newmailnotification') {
+                
+                    if (this.getNodeParameter('matchingcondition') != undefined && this.getNodeParameter('matchingcondition') !== null && this.getNodeParameter('matchingcondition') !== '' ) {
+                        if (this.getNodeParameter('from') != undefined && this.getNodeParameter('from') !== null && this.getNodeParameter('from') !== '') {
+                            criteria.push({'lhs': 'sender', 'rhs': this.getNodeParameter('from'), 'operator': 'contains'})
+                        }
+                        if (this.getNodeParameter('to') != undefined && this.getNodeParameter('to') !== null && this.getNodeParameter('to') !== '') {
+                            criteria.push({ 'lhs': 'to', 'rhs': this.getNodeParameter('to'), 'operator': 'contains' });
+                        }
+                        if (this.getNodeParameter('subject') != undefined && this.getNodeParameter('subject') !== null && this.getNodeParameter('subject') !== '') {
+                            criteria.push( {'lhs': 'subject', 'rhs': this.getNodeParameter('subject'), 'operator': 'contains'});
+                        }
+                        if (this.getNodeParameter('cc') != undefined && this.getNodeParameter('cc') !== null && this.getNodeParameter('cc') !== '') {
+                            criteria.push( {'lhs': 'cc', 'rhs': this.getNodeParameter('cc'), 'operator': 'contains'});
+                        }
+                        if (this.getNodeParameter('bcc') != undefined && this.getNodeParameter('bcc') !== null && this.getNodeParameter('bcc') !== '') {
+                            criteria.push( {'lhs': 'bcc', 'rhs': this.getNodeParameter('bcc'), 'operator': 'contains'});
+                        }
+                        if (this.getNodeParameter('content') != undefined && this.getNodeParameter('content') !== null && this.getNodeParameter('content') !== '') {
+                            criteria.push( {'lhs': 'content', 'rhs': this.getNodeParameter('content'), 'operator': 'contains'});
+                        }
+                        if (this.getNodeParameter('priority') != undefined && this.getNodeParameter('priority') !== null && this.getNodeParameter('priority') !== '') {
+                            criteria.push( {'lhs': 'priority', 'rhs': this.getNodeParameter('priority'), 'operator': 'is'});
+                        }
+                        if (this.getNodeParameter('attachment_type') != undefined && this.getNodeParameter('attachment_type') !== null && this.getNodeParameter('attachment_type') !== '') {
+                            criteria.push( {'lhs': 'attachtype', 'rhs': this.getNodeParameter('attachment_type'), 'operator': 'contains'});
+                        }
+                        if (this.getNodeParameter('attachment_name') != undefined && this.getNodeParameter('attachment_name') !== null && this.getNodeParameter('attachment_name') !== '') {
+                            criteria.push( {'lhs': 'attachnames', 'rhs': this.getNodeParameter('attachment_name'), 'operator': 'contains'});
+                        }
+                        if (this.getNodeParameter('has_attachment') != undefined && this.getNodeParameter('has_attachment') !== null && this.getNodeParameter('has_attachment') !== '') {
+                            criteria.push( {'lhs': 'hasattachment', 'rhs': this.getNodeParameter('attachment_name')});
+                        }
+                        qs.criterias = JSON.stringify(criteria);
+                        qs.matchingCondition = this.getNodeParameter('matchingcondition');
+                    }
+                    else {
+                        qs.criterias = JSON.stringify([]);
+                        qs.matchingCondition = 'ALL';
+                    }
+                }
+                if (triggerOptions == 'newTaggedmailnotification') {
+                    if (this.getNodeParameter('labelname') != undefined && this.getNodeParameter('labelname') !== null && this.getNodeParameter('labelname')) {
+                        const labelStr = String( this.getNodeParameter('labelname') || '').trim();
+
+                        if (labelStr.length > 0) {
+                            const onTag = labelStr.split(",").map(tag => tag.trim()).filter(tag => tag.length > 0); 
+                            if (onTag.length > 0) {
+                                criteria.push({ onTag });
+                            } 
+                        }
+                        qs.criterias = JSON.stringify(criteria);
+                    }
+                }
+                const endpoint = 'integPlatform/api/outgoingWebhooks';
+                const responseData = await zohomailApiRequest.call(this, 'POST', endpoint, {}, qs);
+    
+                if (responseData === undefined) {
+                    return false;
+                }
+                if (triggerOptions === 'newmailnotification'){
+                    if (responseData?.data?.data?.FILTER_DATA !== undefined) {
+                        webhookData.filterId = responseData.data.data.FILTER_DATA.filterId;
+                    }
+                }
+                webhookData.integId = responseData.data.data.integId
+                return true;
+            },
+    
+            async delete(this: IHookFunctions): Promise<boolean> {
+                const webhookData = this.getWorkflowStaticData('node');
+                const accountId = this.getNodeParameter('account') as string;
+                const triggerOptions = this.getNodeParameter('optionstrigger') as string;
+    
+                const qs: IDataObject = {
+                    action: "DELETE_OWH",
+                    accId: accountId,
+                    integId: webhookData.integId,
+                }
+
+                if (triggerOptions === 'newmailnotification') {
+                    qs.filterId =  webhookData.filterId
+                }
+
+                if (webhookData.integId !== undefined ) {
+                    try {
+                        const endpoint = 'integPlatform/api/outgoingWebhooks'
+                        await zohomailApiRequest.call(this, 'DELETE', endpoint, {}, qs);
+                    } catch (error) {
+                        return false;
+                    }
+                    delete webhookData.integId;
+                    if (triggerOptions === 'newmailnotification') {
+                        delete webhookData.filterId;
+                    }
+                }
+                return true;
+            },
+        },
+    };
+    
+    async webhook(this: IWebhookFunctions): Promise<IWebhookResponseData> {
+        const bodyData = this.getBodyData();
+        return {
+            workflowData: [this.helpers.returnJsonArray(bodyData)],
+        };
+    }    
 };
