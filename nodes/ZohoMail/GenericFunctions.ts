@@ -62,7 +62,7 @@ export async function zohomailApiRequest(
 	}
 
 	try {
-		const responseData = await this.helpers.requestOAuth2?.call(this, 'zohoMailOAuth2Api', options);
+		const responseData = await this.helpers.httpRequestWithAuthentication?.call(this, 'zohoMailOAuth2Api', options);
 		if (responseData === undefined) return [];
 	    throwOnErrorStatus.call(this, responseData as IDataObject);
 		return responseData;

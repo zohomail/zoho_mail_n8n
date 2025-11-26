@@ -1,6 +1,6 @@
 {
-  "name": "n8n-nodes-zohomail",
-  "version": "1.0.0-beta.0",
+  "name": "@zohomail/n8n-nodes-zohomail",
+  "version": "1.0.1",
   "description": "This is an n8n community node. It lets you use Zoho Mail in your n8n workflows.",
   "keywords": [
     "n8n-community-node-package",
