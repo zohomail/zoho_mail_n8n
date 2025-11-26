@@ -43,5 +43,5 @@ Write to us in case of any queries at support@zohomail.com.
 ### Description
 This page explains the integration of Zoho Mail with n8n to create workflows that can trigger an action in another application based on the supported triggers or perform a supported action in Zoho Mail based on the triggers from another application.
 
-To learn more about Zoho Mail: [Zoho Mail homepage](https://www.zoho.com/mail/)
-In case of any technical queries: [Contact our sales team](https://www.zoho.com/mail/contact.html)
+- To learn more about Zoho Mail: [Zoho Mail homepage](https://www.zoho.com/mail/)
+- In case of any technical queries: [Contact our sales team](https://www.zoho.com/mail/contact.html)
