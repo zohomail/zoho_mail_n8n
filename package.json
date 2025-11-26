@@ -20,13 +20,13 @@
   },
   "main": "index.js",
   "scripts": {
-      "build": "gulp build:icons",
+      "build": "tsc && gulp build:icons",
       "dev": "tsc --watch",
       "format": "prettier nodes credentials --write",
       "lint": "eslint nodes credentials package.json",
       "lintfix": "eslint nodes credentials package.json --fix"
   },
-  "files": [  
+  "files": [
     "dist"
   ],
   "n8n": {
